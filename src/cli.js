@@ -1,22 +1,32 @@
 
-import commander from "commander";
+import * as commander from "commander";
 import path from "path";
 import inquirer from "inquirer";
 import chalk from "chalk";
+import url from "url";
 
-export const colors = {
+import ui from "./ui.js";
 
-};
 
 const { program, Option } = commander;
 
+/**
+ * @typedef AppConfig
+ * @property {boolean} debug
+ * @property {string} apiKey
+ */
 class App {
     /* Static */
     static async loadScript(scriptPath) {
-        const module = await import(path.resolve("./commands", scriptPath));
+        const module = await import(url.pathToFileURL(path.resolve(process.cwd(), scriptPath)).href);
         return module;
     }
     static Option = Option;
+    static UI = ui;
+    static defaultConfig = {
+        debug: false,
+        apiKey: process.env.OPENAI_API_KEY || "",
+    };
 
     /* Constructor */
     /**
@@ -29,7 +39,14 @@ class App {
         this.chalk = chalk;
     }
 
+    /* Properties */
+    /**@type {AppConfig} */
+    config = {};
+
     /* Instance */
+    get App() {
+        return App;
+    }
     get options() {
         return this.program.opts();
     }
@@ -69,7 +86,7 @@ class App {
                 .description(command.description)
                 .action(async () => {
                     const module = await App.loadScript(command.scriptPath || name);
-                    await module.default?.();
+                    await module.default?.(app);
                     if (command.action) command.action(module);
                 });
         });
@@ -86,8 +103,13 @@ class App {
         });
         return this;
     }
+    loadConfigFromArgs() {
+        this.config = { ...App.defaultConfig, ...this.options };
+        return this;
+    }
     parseArgs() {
         this.program.parse(process.argv);
+        this.loadConfigFromArgs();
         return this;
     }
 }
