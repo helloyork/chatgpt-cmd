@@ -20,6 +20,10 @@ const Options = {
         description: "The API key to use",
         defaultValue: "",
     },
+    "--env, --env-file <path>": {
+        description: "The path to the .env file",
+        defaultValue: ".env",
+    }
 };
 
 app.registerProgram({
@@ -29,7 +33,7 @@ app.registerProgram({
 })
     .registerCommands(Commands)
     .registerOptions(Options)
-    .parseArgs();
+    .start();
 
 
 

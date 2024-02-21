@@ -4,16 +4,24 @@ import path from "path";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import url from "url";
+import dotenv from "dotenv";
+import { Logger } from "./utils.js";
 
 import ui from "./ui.js";
 
 
 const { program, Option } = commander;
 
+
 /**
  * @typedef AppConfig
  * @property {boolean} debug
  * @property {string} apiKey
+ * @property {string} envFile
+ */
+/**
+ * @typedef EnvConfig
+ * @property {string} OPENAI_API_KEY
  */
 class App {
     /* Static */
@@ -25,6 +33,7 @@ class App {
     static UI = ui;
     static defaultConfig = {
         debug: false,
+        envFile: path.resolve(process.cwd(), ".env"),
         apiKey: process.env.OPENAI_API_KEY || "",
     };
 
@@ -40,7 +49,8 @@ class App {
     }
 
     /* Properties */
-    /**@type {AppConfig} */
+    Logger = new Logger(this.App.UI);
+    /**@type {AppConfig & EnvConfig} */
     config = {};
 
     /* Instance */
@@ -49,6 +59,9 @@ class App {
     }
     get options() {
         return this.program.opts();
+    }
+    get UI() {
+        return this.App.UI;
     }
     /**
      * @typedef {Object} ProgramDefinition
@@ -103,13 +116,18 @@ class App {
         });
         return this;
     }
-    loadConfigFromArgs() {
-        this.config = { ...App.defaultConfig, ...this.options };
+    loadConfigFromEnv() {
+        let parsed = dotenv.config({ ...(this.config.envFile ? {} : { path: this.config.envFile }) });
+        this.config = { ...App.defaultConfig, ...this.config, ...(parsed ? parsed.parsed : {}) };
         return this;
     }
-    parseArgs() {
+    loadConfigFromArgs() {
+        this.config = { ...App.defaultConfig, ...this.config, ...this.options };
+        return this;
+    }
+    start() {
         this.program.parse(process.argv);
-        this.loadConfigFromArgs();
+        this.loadConfigFromArgs().loadConfigFromEnv();
         return this;
     }
 }

@@ -4,7 +4,14 @@ import chalk from "chalk";
 export const Colors = {
     Red: "#FF5733",
     Green: "#33FF57",
-    Blue: "#3366FF"
+    Blue: "#3366FF",
+    Yellow: "#FFFF33",
+    Purple: "#FF33FF",
+    Cyan: "#33FFFF",
+    White: "#FFFFFF",
+    Black: "#000000",
+    Gray: "#808080",
+    Navy: "#000080",
 };
 
 /**
